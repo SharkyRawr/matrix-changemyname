@@ -1,14 +1,18 @@
-from PyQt5.QtCore import QAbstractListModel, QModelIndex, QObject, QSortFilterProxyModel, QThread, QTimer, QVariant, Qt
-from requests.models import HTTPError
-from .mainwindow import Ui_MainWindow
-from .py_login_dialog import LoginForm
-from PyQt5.QtWidgets import QMainWindow, QMessageBox
 import json
 import typing
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
+from PyQt5.QtCore import (QAbstractListModel, QModelIndex, QObject,
+                          QSortFilterProxyModel, Qt, QThread, QTimer, QVariant)
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QFileDialog, QMainWindow, QMessageBox
+from requests.models import HTTPError
 
 from lib import MatrixAPI, MatrixRoom
+
+from .mainwindow import Ui_MainWindow
+from .py_login_dialog import LoginForm
+
 matrix = MatrixAPI()
 
 
@@ -91,6 +95,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         self.txtFilter.textChanged.connect(set_filter_text)
 
+        self.cmdUploadAvatar.clicked.connect(self.upload_avatar_dialog)
+
         self.txtUserID.setText("<Please Login>")
         self.cmdLogin.clicked.connect(self.show_login_window)
 
@@ -126,8 +132,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.statusbar.showMessage("Fetching room/member names ...")
 
                 def finished():
-                    self.statusbar.showMessage("Status: {}, last active: {} seconds ago".format(
-                        p['presence'], p['last_active_ago']
+                    self.statusbar.showMessage("Status: {}, last active: {} seconds ago, {}".format(
+                        p['presence'], p['last_active_ago'], len(r)
                     ))
 
                 self._t.finished.connect(finished)
@@ -146,3 +152,16 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             if dlg.chkSave.isChecked():
                 matrix.save()
             self.matrix_test()
+
+    def upload_avatar_dialog(self) -> None:
+        dlg = QFileDialog(self, "Upload avatar")
+        dlg.setFileMode(QFileDialog.ExistingFile)
+        dlg.setNameFilter("Images (*.png *.jpg *.webp)")
+
+        if dlg.exec_():
+            filename = dlg.selectedFiles().pop()
+            mxc = matrix.upload_media(filename)
+            self.txtRoomAvatarMXC.setPlainText(mxc)
+
+            pixmap = QPixmap(filename)
+            self.picAvatar.setPixmap(pixmap)

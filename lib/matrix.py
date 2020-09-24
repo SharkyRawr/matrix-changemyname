@@ -1,13 +1,15 @@
-from typing import Any, List, Optional, Union
-import requests
 import json
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
+
+import requests
 
 PUT_ROOM_STATE_API = r'/_matrix/client/r0/rooms/{roomid}/state/m.room.member/{userid}'
 GET_PRESENCE_STATUS_API = r'/_matrix/client/r0/presence/{userid}/status'
 GET_JOINED_ROOMS_API = r'/_matrix/client/r0/joined_rooms'
 GET_ROOM_NAME_API = r'/_matrix/client/r0/rooms/{roomid}/state/m.room.name/'
 GET_ROOM_MEMBERS_API = r'/_matrix/client/r0/rooms/{roomid}/members'
+POST_MEDIA_UPLOAD_API = r'/_matrix/media/r0/upload'
 
 
 class MatrixRoom(object):
@@ -41,12 +43,16 @@ class MatrixAPI(object):
     def set_token(self, access_token: str) -> None:
         self.access_token = access_token
 
-    def do(self, method: str, url: str, args: dict = None):
-        headers = {
+    def do(self, method: str, url: str, json: dict = None, headers: Dict[str, str] = None, **kwargs):
+        hdr = {
             'Authorization': r'Bearer {}'.format(self.access_token)
         }
+        if headers is not None:
+            hdr.update(headers)
+
         _rm = getattr(requests, method)
-        r = _rm(urljoin(self.homeserver, url), json=args, headers=headers)
+        r = _rm(urljoin(self.homeserver, url),
+                json=json, headers=hdr, **kwargs)
         return r
 
     def save(self, statefile='settings.json') -> None:
@@ -117,3 +123,13 @@ class MatrixAPI(object):
             memberlist.append(chunk['content']['displayname'])
 
         return memberlist
+
+    def upload_media(self, filename: str, content_type: str = None) -> str:
+        from mimetypes import guess_type
+        guessed_type, _ = guess_type(filename)
+        ct = content_type or str(guessed_type)
+        with open(filename, 'rb') as f:
+            r = self.do('post', POST_MEDIA_UPLOAD_API, headers=dict(
+                content_type=ct), params=dict(filename=filename), data=f)
+        r.raise_for_status()
+        return r.json()['content_uri']
