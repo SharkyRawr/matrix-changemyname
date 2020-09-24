@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QAbstractListModel, QModelIndex, QObject, QThread, QTimer, QVariant, Qt
+from PyQt5.QtCore import QAbstractListModel, QModelIndex, QObject, QSortFilterProxyModel, QThread, QTimer, QVariant, Qt
 from requests.models import HTTPError
 from .mainwindow import Ui_MainWindow
 from .py_login_dialog import LoginForm
@@ -84,6 +84,13 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         super().__init__(*args, **kwargs)
         self.setupUi(self)
 
+        self.proxy = QSortFilterProxyModel(self)
+
+        def set_filter_text():
+            self.proxy.setFilterRegExp(self.txtFilter.toPlainText())
+
+        self.txtFilter.textChanged.connect(set_filter_text)
+
         self.txtUserID.setText("<Please Login>")
         self.cmdLogin.clicked.connect(self.show_login_window)
 
@@ -109,10 +116,21 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             # Populate room list
             if (r := matrix.get_rooms()) is not None:
                 model = RoomListModel(self, r)
-                self.listRooms.setModel(model)
+
+                self.proxy.setSourceModel(model)
+                self.listRooms.setModel(self.proxy)
+
                 # Start fetching room names
                 self._t = RoomListNameWorker(self, model)
                 self._t.start()
+                self.statusbar.showMessage("Fetching room/member names ...")
+
+                def finished():
+                    self.statusbar.showMessage("Status: {}, last active: {} seconds ago".format(
+                        p['presence'], p['last_active_ago']
+                    ))
+
+                self._t.finished.connect(finished)
 
         else:
             QMessageBox.critical(self, "Login failed",
