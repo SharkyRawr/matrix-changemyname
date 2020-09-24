@@ -5,7 +5,7 @@ from .py_login_dialog import LoginForm
 from PyQt5.QtWidgets import QMainWindow, QMessageBox
 import json
 import typing
-from typing import List, Dict
+from typing import List, Dict, Union
 
 
 from lib import MatrixAPI, MatrixRoom
@@ -37,13 +37,26 @@ class RoomListModel(QAbstractListModel):
         try:
             if (name := matrix.get_room_name(roomid)) is not None:
                 print(roomid)
-                room.set_name(name)
-                self.rooms[room.room_id] = room
+                self.set_room_name(room, name)
                 return True
         except HTTPError:
             pass
 
         return False
+
+    def set_room_name(self, room: Union[MatrixRoom, str], name: str) -> None:
+        roomid = room.room_id if type(room) is MatrixRoom else room
+        room = self.rooms[roomid]
+        room.set_name(name)
+        self.rooms[roomid] = room
+
+        row = list(self.rooms.keys()).index(roomid)
+
+        self.dataChanged.emit(
+            self.createIndex(row, 0),
+            self.createIndex(row, 0)
+        )
+
 
 class RoomListNameWorker(QThread):
     def __init__(self, parent: typing.Optional['QObject'], roomlistmodel: RoomListModel) -> None:
@@ -52,7 +65,16 @@ class RoomListNameWorker(QThread):
 
     def run(self):
         for r in self.model.rooms:
-            self.model.update_room_name(r)
+            if not self.model.update_room_name(r):
+                print(r)
+                try:
+                    members = matrix.get_room_members(r)
+                    self.model.set_room_name(
+                        r, "{} with {}".format(r, ', '.join(members)))
+                except HTTPError as herr:
+                    print(herr)
+                    pass
+
             self.msleep(100)
         print("RoomListNameWorker is done!")
 

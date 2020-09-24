@@ -7,6 +7,7 @@ PUT_ROOM_STATE_API = r'/_matrix/client/r0/rooms/{roomid}/state/m.room.member/{us
 GET_PRESENCE_STATUS_API = r'/_matrix/client/r0/presence/{userid}/status'
 GET_JOINED_ROOMS_API = r'/_matrix/client/r0/joined_rooms'
 GET_ROOM_NAME_API = r'/_matrix/client/r0/rooms/{roomid}/state/m.room.name/'
+GET_ROOM_MEMBERS_API = r'/_matrix/client/r0/rooms/{roomid}/members'
 
 
 class MatrixRoom(object):
@@ -100,3 +101,13 @@ class MatrixAPI(object):
 
         data: dict = r.json()
         return data.get('name', None)
+
+    def get_room_members(self, room: Union[MatrixRoom, str]) -> List[str]:
+        r = self.do('get', GET_ROOM_MEMBERS_API.format(
+            roomid=room.room_id if type(room) is MatrixRoom else room))
+        r.raise_for_status()
+
+        data: dict = r.json()
+        chunks: list = data['chunk']
+
+        return [chunk['content']['displayname'] for chunk in chunks]
