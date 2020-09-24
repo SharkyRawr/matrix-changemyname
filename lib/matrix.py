@@ -102,7 +102,7 @@ class MatrixAPI(object):
         data: dict = r.json()
         return data.get('name', None)
 
-    def get_room_members(self, room: Union[MatrixRoom, str]) -> List[str]:
+    def get_room_members(self, room: Union[MatrixRoom, str], exclude_myself: bool = False) -> List[str]:
         r = self.do('get', GET_ROOM_MEMBERS_API.format(
             roomid=room.room_id if type(room) is MatrixRoom else room))
         r.raise_for_status()
@@ -110,4 +110,10 @@ class MatrixAPI(object):
         data: dict = r.json()
         chunks: list = data['chunk']
 
-        return [chunk['content']['displayname'] for chunk in chunks]
+        memberlist = []
+        for chunk in chunks:
+            if exclude_myself and chunk['sender'] == self.user_id:
+                continue
+            memberlist.append(chunk['content']['displayname'])
+
+        return memberlist

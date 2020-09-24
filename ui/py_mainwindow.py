@@ -68,7 +68,7 @@ class RoomListNameWorker(QThread):
             if not self.model.update_room_name(r):
                 print(r)
                 try:
-                    members = matrix.get_room_members(r)
+                    members = matrix.get_room_members(r, exclude_myself=True)
                     self.model.set_room_name(
                         r, "{} with {}".format(r, ', '.join(members)))
                 except HTTPError as herr:
