@@ -8,7 +8,8 @@ def compileUI():
 
 if __name__ == "__main__":
 
-    compileUI()
+    if __debug__:
+        compileUI()
     from ui.py_mainwindow import MainWindow
 
     app = QApplication(sys.argv)
