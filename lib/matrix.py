@@ -9,14 +9,19 @@ PUT_ROOM_STATE_API = r'/_matrix/client/r0/rooms/{roomid}/state/m.room.member/{us
 GET_PRESENCE_STATUS_API = r'/_matrix/client/r0/presence/{userid}/status'
 GET_JOINED_ROOMS_API = r'/_matrix/client/r0/joined_rooms'
 GET_ROOM_NAME_API = r'/_matrix/client/r0/rooms/{roomid}/state/m.room.name/'
-GET_ROOM_MEMBERS_API = r'/_matrix/client/r0/rooms/{roomid}/members'
+GET_ROOM_MEMBERS_API = r'/_matrix/client/r0/rooms/{roomid}/joined_members'
 POST_MEDIA_UPLOAD_API = r'/_matrix/media/r0/upload'
 GET_USER_PROFILE_API = r'/_matrix/client/r0/profile/{userid}'
 
 
 class MatrixUserProfile(object):
     avatar_url: str
-    displayname: str
+    display_name: str
+
+    def __init__(self, from_dict: Optional[dict] = None) -> None:
+        if from_dict:
+            for k in from_dict.keys():
+                setattr(self, k, from_dict[k])
 
 
 class MatrixRoom(object):
@@ -133,21 +138,14 @@ class MatrixAPI(object):
         data: dict = r.json()
         return data.get('name', None)
 
-    def get_room_members(self, room: Union[MatrixRoom, str], exclude_myself: bool = False) -> List[str]:
+    def get_room_members(self, room: Union[MatrixRoom, str], exclude_myself: bool = False) -> List[MatrixUserProfile]:
         r = self.do('get', GET_ROOM_MEMBERS_API.format(
             roomid=room.room_id if type(room) is MatrixRoom else room))
         r.raise_for_status()
 
         data: dict = r.json()
-        chunks: list = data['chunk']
-
-        memberlist = []
-        for chunk in chunks:
-            if exclude_myself and chunk['sender'] == self.user_id:
-                continue
-            memberlist.append(chunk['content']['displayname'])
-
-        return memberlist
+        joined_members: list = data['joined']
+        return [MatrixUserProfile(joined_members[uid]) for uid in joined_members]
 
     def upload_media(self, filename: str, content_type: str = None) -> str:
         from mimetypes import guess_type
@@ -165,7 +163,5 @@ class MatrixAPI(object):
         r.raise_for_status()
 
         data: dict = r.json()
-        m = MatrixUserProfile()
-        for k in data.keys():
-            setattr(m, k, data[k])
+        m = MatrixUserProfile(data)
         return m
