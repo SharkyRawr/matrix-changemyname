@@ -174,7 +174,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def upload_avatar_dialog(self) -> None:
         dlg = QFileDialog(self, "Upload avatar")
         dlg.setFileMode(QFileDialog.ExistingFile)
-        dlg.setNameFilter("Images (*.png *.jpg *.webp)")
+        dlg.setNameFilter("Images (*.png *.jpg *.jpeg *.webp)")
 
         if dlg.exec_():
             filename = dlg.selectedFiles().pop()
