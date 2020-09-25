@@ -2,6 +2,7 @@ import json
 import os
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
+from lib.cache import cache_manager, DEFAULT_EXPIRE
 
 import requests
 
@@ -104,6 +105,7 @@ class MatrixAPI(object):
         except Exception as ex:
             raise
 
+    @cache_manager.cache("get_presence", expire=5)
     def get_presence(self, userid: str = None) -> Any:
         uid = userid or self.user_id
 
@@ -131,11 +133,13 @@ class MatrixAPI(object):
         r.raise_for_status()
         return r.json()
 
+    @cache_manager.cache("get_rooms", expire=DEFAULT_EXPIRE)
     def get_rooms(self) -> List[str]:
         r = self.do('get', GET_JOINED_ROOMS_API)
         r.raise_for_status()
         return r.json()['joined_rooms']
 
+    @cache_manager.cache("get_room_name", expire=DEFAULT_EXPIRE)
     def get_room_name(self, room: Union[MatrixRoom, str]) -> Optional[str]:
         r = self.do('get', GET_ROOM_NAME_API.format(
             roomid=room.room_id if type(room) is MatrixRoom else room))
@@ -145,6 +149,7 @@ class MatrixAPI(object):
         data: dict = r.json()
         return data.get('name', None)
 
+    @cache_manager.cache("get_room_members", expire=DEFAULT_EXPIRE)
     def get_room_members(self, room: Union[MatrixRoom, str], exclude_myself: bool = False) -> List[MatrixUserProfile]:
         r = self.do('get', GET_ROOM_MEMBERS_API.format(
             roomid=room.room_id if type(room) is MatrixRoom else room))
@@ -171,6 +176,7 @@ class MatrixAPI(object):
         r.raise_for_status()
         return r.json()['content_uri']
 
+    @cache_manager.cache("get_user_profile", expire=DEFAULT_EXPIRE)
     def get_user_profile(self, user_id: Optional[str]) -> MatrixUserProfile:
         r = self.do('get', GET_USER_PROFILE_API.format(
             userid=user_id or self.user_id))

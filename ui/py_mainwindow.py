@@ -1,4 +1,5 @@
 import json
+from lib import cache
 import typing
 from typing import Dict, List, Optional, Union
 
@@ -77,7 +78,7 @@ class RoomListNameWorker(QThread):
             if not self.model.update_room_name(r):
                 print(r)
                 try:
-                    members = matrix.get_room_members(r, exclude_myself=True)
+                    members = matrix.get_room_members(r, True)
                     self.model.set_room_name(
                         r, "{} with {}".format(r, ', '.join([str(m.name) for m in members])))
                 except KeyError:
@@ -85,8 +86,7 @@ class RoomListNameWorker(QThread):
                 except HTTPError as herr:
                     print(herr)
                     pass
-
-            self.msleep(100)
+            #self.msleep(100)
         print("RoomListNameWorker is done!")
 
 
