@@ -80,6 +80,8 @@ class RoomListNameWorker(QThread):
                     members = matrix.get_room_members(r, exclude_myself=True)
                     self.model.set_room_name(
                         r, "{} with {}".format(r, ', '.join(members)))
+                except KeyError:
+                    pass
                 except HTTPError as herr:
                     print(herr)
                     pass
