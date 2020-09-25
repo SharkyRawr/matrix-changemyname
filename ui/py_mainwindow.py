@@ -157,6 +157,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             matrix = MatrixAPI(dlg.access_token, dlg.homeserver, dlg.user_id)
             if dlg.chkSave.isChecked():
                 matrix.save()
+            self.txtUserID.setText(dlg.user_id)
             self.matrix_test()
 
     def upload_avatar_dialog(self) -> None:
