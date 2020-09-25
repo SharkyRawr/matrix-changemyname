@@ -180,11 +180,14 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         roomnick = self.txtRoomNickname.toPlainText()
         roomavatar = self.txtRoomAvatarMXC.toPlainText()
 
-        for room in rooms:
-            if (room := self.model.get_room_by_name(room)) is not None:
-                self.statusbar.showMessage(
-                    "Sending event to room {} ...".format(room))
-                matrix.update_roomstate(
-                    room=room, displayname=roomnick, avatarmxc=roomavatar)
-            else:
-                print("Cannot send events to:", room)
+        try:
+            for room in rooms:
+                if (room := self.model.get_room_by_name(room)) is not None:
+                    self.statusbar.showMessage(
+                        "Sending event to room {} ...".format(room))
+                    matrix.update_roomstate(
+                        room=room, displayname=roomnick, avatarmxc=roomavatar)
+                else:
+                    print("Cannot send events to:", room)
+        except Exception as ex:
+            QMessageBox.critical(self, "Login failed", str(ex))

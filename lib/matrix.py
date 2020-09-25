@@ -95,7 +95,7 @@ class MatrixAPI(object):
             args['avatar_url'] = avatarmxc
 
         if not displayname and not avatarmxc:
-            raise AssertionError("What exactly are you trying to do?")
+            raise AssertionError("What exactly are you trying to do? Set a room-nick or room-avatar and try again.")
 
         room = room.room_id if type(room) is MatrixRoom else room
 
