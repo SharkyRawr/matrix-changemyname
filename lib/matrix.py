@@ -16,7 +16,7 @@ GET_USER_PROFILE_API = r'/_matrix/client/r0/profile/{userid}'
 
 class MatrixUserProfile(object):
     avatar_url: str
-    display_name: str
+    displayname: str
 
     def __init__(self, from_dict: Optional[dict] = None) -> None:
         if from_dict:
