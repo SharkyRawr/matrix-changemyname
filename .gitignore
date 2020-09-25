@@ -4,3 +4,8 @@ __pycache__
 /build
 /.vscode
 /venv
+
+# Ignore auto-generated files
+/res/*.py
+/ui/login_dialog.py
+/ui/mainwindow.py

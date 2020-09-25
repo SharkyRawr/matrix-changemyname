@@ -10,9 +10,9 @@ class LoginForm(Ui_LoginForm, QDialog):
 
 
     def is_accepted(self) -> None:
-        self.access_token = self.txtAccessToken.toPlainText()
-        self.homeserver = self.txtHomeserver.toPlainText()
-        self.user_id = self.txtUserID.toPlainText()
+        self.access_token = self.txtAccessToken.toPlainText().replace(r'\n', '').strip()
+        self.homeserver = self.txtHomeserver.toPlainText().replace(r'\n', '').strip()
+        self.user_id = self.txtUserID.toPlainText().replace(r'\n', '').strip()
 
     def updateDefaultsFromMatrix(self, matrix: MatrixAPI) -> None:
         self.txtAccessToken.setPlainText(matrix.access_token)

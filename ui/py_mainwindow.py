@@ -2,9 +2,9 @@ import json
 import typing
 from typing import Dict, List, Union, Optional
 
-from PyQt5.QtCore import (QAbstractListModel, QModelIndex, QObject,
+from PyQt5.QtCore import (QAbstractListModel, QDir, QModelIndex, QObject,
                           QSortFilterProxyModel, Qt, QThread, QTimer, QVariant)
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from requests.models import HTTPError
 
@@ -91,7 +91,9 @@ class RoomListNameWorker(QThread):
 class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        from res import res
         self.setupUi(self)
+        self.setWindowIcon(QIcon(":/icon.png"))
 
         self.proxy = QSortFilterProxyModel(self)
 
@@ -124,6 +126,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.statusbar.showMessage("Status: {}, last active: {} seconds ago".format(
                 p['presence'], p['last_active_ago']
             ))
+
+            m = matrix.get_user_profile(matrix.user_id)
+            self.txtGlobalName.setText(m.displayname)
 
             # Populate room list
             if (r := matrix.get_rooms()) is not None:
@@ -158,7 +163,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             if dlg.chkSave.isChecked():
                 matrix.save()
             self.txtUserID.setText(dlg.user_id)
-            self.matrix_test()
+            try:
+                self.matrix_test()
+            except Exception as ex:
+                QMessageBox.critical(self, "Login failed",
+                                 "Matrix login has failed:\n" + str(ex))
 
     def upload_avatar_dialog(self) -> None:
         dlg = QFileDialog(self, "Upload avatar")

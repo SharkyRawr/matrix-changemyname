@@ -11,6 +11,12 @@ GET_JOINED_ROOMS_API = r'/_matrix/client/r0/joined_rooms'
 GET_ROOM_NAME_API = r'/_matrix/client/r0/rooms/{roomid}/state/m.room.name/'
 GET_ROOM_MEMBERS_API = r'/_matrix/client/r0/rooms/{roomid}/members'
 POST_MEDIA_UPLOAD_API = r'/_matrix/media/r0/upload'
+GET_USER_PROFILE_API = r'/_matrix/client/r0/profile/{userid}'
+
+
+class MatrixUserProfile(object):
+    avatar_url: str
+    displayname: str
 
 
 class MatrixRoom(object):
@@ -38,8 +44,16 @@ class MatrixAPI(object):
                  user_id: str = None,
                  ):
         self.access_token = access_token
+        if self.access_token:
+            self.access_token = self.access_token.strip()
+
         self.homeserver = homeserver
+        if self.homeserver:
+            self.homeserver = self.homeserver.strip()
+
         self.user_id = user_id
+        if self.user_id:
+            self.user_id = self.user_id.strip()
 
     def set_token(self, access_token: str) -> None:
         self.access_token = access_token
@@ -95,7 +109,8 @@ class MatrixAPI(object):
             args['avatar_url'] = avatarmxc
 
         if not displayname and not avatarmxc:
-            raise AssertionError("What exactly are you trying to do? Set a room-nick or room-avatar and try again.")
+            raise AssertionError(
+                "What exactly are you trying to do? Set a room-nick or room-avatar and try again.")
 
         room = room.room_id if type(room) is MatrixRoom else room
 
@@ -143,3 +158,14 @@ class MatrixAPI(object):
                         'content-type': ct}, params=dict(filename=os.path.basename(filename)), data=f)
         r.raise_for_status()
         return r.json()['content_uri']
+
+    def get_user_profile(self, user_id: Optional[str]) -> MatrixUserProfile:
+        r = self.do('get', GET_USER_PROFILE_API.format(
+            userid=user_id or self.user_id))
+        r.raise_for_status()
+
+        data: dict = r.json()
+        m = MatrixUserProfile()
+        for k in data.keys():
+            setattr(m, k, data[k])
+        return m
