@@ -79,7 +79,7 @@ class RoomListNameWorker(QThread):
                 try:
                     members = matrix.get_room_members(r, exclude_myself=True)
                     self.model.set_room_name(
-                        r, "{} with {}".format(r, ', '.join([str(m.display_name) for m in members])))
+                        r, "{} with {}".format(r, ', '.join([str(m.name) for m in members])))
                 except KeyError:
                     pass
                 except HTTPError as herr:
@@ -130,7 +130,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             ))
 
             m = matrix.get_user_profile(matrix.user_id)
-            self.txtGlobalName.setText(m.displayname)
+            self.txtGlobalName.setText(m.name)
 
             # Populate room list
             if (r := matrix.get_rooms()) is not None:

@@ -23,6 +23,13 @@ class MatrixUserProfile(object):
             for k in from_dict.keys():
                 setattr(self, k, from_dict[k])
 
+    @property
+    def name(self) -> str:
+        if hasattr(self, 'display_name'):
+            return getattr(self, 'display_name')
+        else:
+            return self.displayname
+
 
 class MatrixRoom(object):
     matrix = None
@@ -145,6 +152,13 @@ class MatrixAPI(object):
 
         data: dict = r.json()
         joined_members: list = data['joined']
+        if exclude_myself:
+            members = []
+            for uid in joined_members:
+                if exclude_myself and uid == self.user_id:
+                    continue
+                members.append(MatrixUserProfile(joined_members[uid]))
+            return members
         return [MatrixUserProfile(joined_members[uid]) for uid in joined_members]
 
     def upload_media(self, filename: str, content_type: str = None) -> str:
