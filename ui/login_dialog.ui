@@ -38,7 +38,7 @@
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>28</height>
+       <height>30</height>
       </size>
      </property>
      <property name="maximumSize">
@@ -46,6 +46,9 @@
        <width>16777215</width>
        <height>24</height>
       </size>
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOff</enum>
      </property>
      <property name="tabChangesFocus">
       <bool>true</bool>
@@ -73,7 +76,7 @@
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>28</height>
+       <height>30</height>
       </size>
      </property>
      <property name="tabChangesFocus">
@@ -115,7 +118,7 @@
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>28</height>
+       <height>30</height>
       </size>
      </property>
      <property name="maximumSize">
@@ -123,6 +126,9 @@
        <width>16777215</width>
        <height>24</height>
       </size>
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOff</enum>
      </property>
      <property name="tabChangesFocus">
       <bool>true</bool>
