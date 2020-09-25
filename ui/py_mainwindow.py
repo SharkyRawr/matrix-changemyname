@@ -96,6 +96,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.txtFilter.textChanged.connect(set_filter_text)
 
         self.cmdUploadAvatar.clicked.connect(self.upload_avatar_dialog)
+        self.cmdApply.clicked.connect(self.apply_room_stuff)
 
         self.txtUserID.setText("<Please Login>")
         self.cmdLogin.clicked.connect(self.show_login_window)
@@ -121,14 +122,14 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
             # Populate room list
             if (r := matrix.get_rooms()) is not None:
-                model = RoomListModel(self, r)
+                self.model = RoomListModel(self, r)
 
-                self.proxy.setSourceModel(model)
+                self.proxy.setSourceModel(self.model)
                 self.listRooms.setModel(self.proxy)
 
                 # Start fetching room names
-                self._t = RoomListNameWorker(self, model)
-                self._t.start()
+                self._t = RoomListNameWorker(self, self.model)
+                # self._t.start()
                 self.statusbar.showMessage("Fetching room/member names ...")
 
                 def finished():
@@ -165,3 +166,16 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
             pixmap = QPixmap(filename)
             self.picAvatar.setPixmap(pixmap)
+
+    def apply_room_stuff(self) -> None:
+        items = self.listRooms.selectedIndexes()
+        rooms = [self.proxy.data(it, Qt.DisplayRole) for it in items]
+
+        roomnick = self.txtRoomNickname.toPlainText()
+        roomavatar = self.txtRoomAvatarMXC.toPlainText()
+
+        for room in rooms:
+            self.statusbar.showMessage(
+                "Sending event to room {} ...".format(room))
+            matrix.update_roomstate(
+                room=room, displayname=roomnick, avatarmxc=roomavatar)

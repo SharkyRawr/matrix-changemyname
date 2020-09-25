@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
 
@@ -84,8 +85,10 @@ class MatrixAPI(object):
         r.raise_for_status()
         return r.json()
 
-    def update_roomstate(self, displayname: str = None, avatarmxc: str = None):
-        args = {}
+    def update_roomstate(self, room: Union[MatrixRoom, str], displayname: str = None, avatarmxc: str = None):
+        args = {
+            'membership': 'join'
+        }
         if displayname:
             args['displayname'] = displayname
         if avatarmxc:
@@ -93,6 +96,13 @@ class MatrixAPI(object):
 
         if not displayname and not avatarmxc:
             raise AssertionError("What exactly are you trying to do?")
+
+        room = room.room_id if type(room) is MatrixRoom else room
+
+        r = self.do('put', PUT_ROOM_STATE_API.format(
+            roomid=room, userid=self.user_id), json=args)
+        r.raise_for_status()
+        return r.json()
 
     def get_rooms(self) -> List[str]:
         r = self.do('get', GET_JOINED_ROOMS_API)
@@ -129,7 +139,7 @@ class MatrixAPI(object):
         guessed_type, _ = guess_type(filename)
         ct = content_type or str(guessed_type)
         with open(filename, 'rb') as f:
-            r = self.do('post', POST_MEDIA_UPLOAD_API, headers=dict(
-                content_type=ct), params=dict(filename=filename), data=f)
+            r = self.do('post', POST_MEDIA_UPLOAD_API, headers={
+                        'content-type': ct}, params=dict(filename=os.path.basename(filename)), data=f)
         r.raise_for_status()
         return r.json()['content_uri']
