@@ -1,10 +1,10 @@
 import json
 import typing
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Optional, Union
 
 from PyQt5.QtCore import (QAbstractListModel, QDir, QModelIndex, QObject,
                           QSortFilterProxyModel, Qt, QThread, QTimer, QVariant)
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from requests.models import HTTPError
 
@@ -167,7 +167,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.matrix_test()
             except Exception as ex:
                 QMessageBox.critical(self, "Login failed",
-                                 "Matrix login has failed:\n" + str(ex))
+                                     "Matrix login has failed:\n" + str(ex))
 
     def upload_avatar_dialog(self) -> None:
         dlg = QFileDialog(self, "Upload avatar")
