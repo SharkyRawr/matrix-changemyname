@@ -93,47 +93,59 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Search:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QTextEdit" name="txtFilter">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>24</height>
-           </size>
-          </property>
-          <property name="placeholderText">
-           <string>RegExp filter</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QGroupBox" name="groupBox_3">
+        <property name="title">
+         <string>Rooms</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Search:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTextEdit" name="txtFilter">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="placeholderText">
+              <string>RegExp filter</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QListView" name="listRooms">
+           <property name="selectionMode">
+            <enum>QAbstractItemView::MultiSelection</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </item>
       <item>
-       <widget class="QListView" name="listRooms">
-        <property name="selectionMode">
-         <enum>QAbstractItemView::MultiSelection</enum>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_3"/>
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox_2">
