@@ -1,6 +1,6 @@
 import json
 import typing
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 from PyQt5.QtCore import (QAbstractListModel, QModelIndex, QObject,
                           QSortFilterProxyModel, Qt, QThread, QTimer, QVariant)
@@ -35,6 +35,11 @@ class RoomListModel(QAbstractListModel):
             return QVariant()
 
         return str(self.rooms[self.index_to_key(index.row())])
+
+    def get_room_by_name(self, name: str) -> Optional[MatrixRoom]:
+        for k, r in self.rooms.items():
+            if r.name == name:
+                return r
 
     def update_room_name(self, roomid: str) -> bool:
         room = self.rooms[roomid]
@@ -129,7 +134,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
                 # Start fetching room names
                 self._t = RoomListNameWorker(self, self.model)
-                # self._t.start()
+                self._t.start()
                 self.statusbar.showMessage("Fetching room/member names ...")
 
                 def finished():
@@ -175,7 +180,10 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         roomavatar = self.txtRoomAvatarMXC.toPlainText()
 
         for room in rooms:
-            self.statusbar.showMessage(
-                "Sending event to room {} ...".format(room))
-            matrix.update_roomstate(
-                room=room, displayname=roomnick, avatarmxc=roomavatar)
+            if (room := self.model.get_room_by_name(room)) is not None:
+                self.statusbar.showMessage(
+                    "Sending event to room {} ...".format(room))
+                matrix.update_roomstate(
+                    room=room, displayname=roomnick, avatarmxc=roomavatar)
+            else:
+                print("Cannot send events to:", room)
