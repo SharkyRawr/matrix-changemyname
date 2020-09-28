@@ -1,3 +1,5 @@
+[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7W52AOXC)
+
 # Matrix ChangeMyName
 
 ![Screenshot-20200929001406-859x600](https://user-images.githubusercontent.com/246984/94491566-c4291800-01e8-11eb-85d5-c5a4fb983e2a.png)
@@ -49,3 +51,5 @@ Finally click the apply button to apply the changes. Magic!
 ---------------------------------------
 
 Software is provided as-is, I don't take responsibility if your server blows up, tokens get stolen or whatever. It's open source software, do with it what you will (but stay within the terms of the LICENSE). :)
+
+[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7W52AOXC)
