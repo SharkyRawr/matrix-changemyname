@@ -9,3 +9,4 @@ __pycache__
 /res/*.py
 /ui/login_dialog.py
 /ui/mainwindow.py
+/persona.json

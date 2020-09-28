@@ -3,7 +3,8 @@ import typing
 from typing import Dict, List, Optional, Union
 
 from PyQt5.QtCore import (QAbstractListModel, QDir, QModelIndex, QObject,
-                          QSortFilterProxyModel, Qt, QThread, QTimer, QVariant)
+                          QSortFilterProxyModel, Qt, QThread, QTimer, QVariant,
+                          pyqtSlot)
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from requests.models import HTTPError
@@ -91,6 +92,9 @@ class RoomListNameWorker(QThread):
 
 
 class MainWindow(Ui_MainWindow, QMainWindow):
+    SETTING_DISPLAYNAME: str = r'display_name'
+    SETTING_AVATARURL: str = r'avatar_url'
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         from res import res
@@ -110,7 +114,31 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.txtUserID.setText("<Please Login>")
         self.cmdLogin.clicked.connect(self.show_login_window)
 
+        self.cmdLoad.clicked.connect(self.load_persona)
+        self.cmdSave.clicked.connect(self.save_persona)
+
         self.load_if_available()
+
+    @pyqtSlot()
+    def load_persona(self) -> None:
+        try:
+            with open('persona.json') as f:
+                persona = json.load(f)
+                self.txtRoomNickname.setPlainText(persona.get(MainWindow.SETTING_DISPLAYNAME, ''))
+                self.txtRoomAvatarMXC.setPlainText(persona.get(MainWindow.SETTING_AVATARURL, ''))
+        except FileNotFoundError:
+            pass
+        except Exception as ex:
+            QMessageBox.critical(
+                self, "Error", "Could not restore persona: " + str(type(ex)) + ":\n" + str(ex))
+
+    @pyqtSlot()
+    def save_persona(self) -> None:
+        with open('persona.json', 'w') as f:
+            json.dump({
+                MainWindow.SETTING_DISPLAYNAME: self.txtRoomNickname.toPlainText(),
+                MainWindow.SETTING_AVATARURL: self.txtRoomAvatarMXC.toPlainText()
+            }, f)
 
     def load_if_available(self) -> None:
         try:
@@ -155,6 +183,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             QMessageBox.critical(self, "Login failed",
                                  "Matrix login has failed, please login again...")
 
+    @pyqtSlot()
     def show_login_window(self) -> None:
         global matrix
         dlg = LoginForm(self)
@@ -171,6 +200,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 QMessageBox.critical(self, "Login failed",
                                      "Matrix login has failed:\n" + str(ex))
 
+    @pyqtSlot()
     def upload_avatar_dialog(self) -> None:
         dlg = QFileDialog(self, "Upload avatar")
         dlg.setFileMode(QFileDialog.ExistingFile)
@@ -184,6 +214,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             pixmap = QPixmap(filename)
             self.picAvatar.setPixmap(pixmap)
 
+    @pyqtSlot()
     def apply_room_stuff(self) -> None:
         items = self.listRooms.selectedIndexes()
         rooms = [self.proxy.data(it, Qt.DisplayRole) for it in items]
