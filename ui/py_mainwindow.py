@@ -173,7 +173,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.statusbar.showMessage("Fetching room/member names ...")
 
                 def finished():
-                    self.statusbar.showMessage("Status: {}, last active: {} seconds ago, {}".format(
+                    self.statusbar.showMessage("Status: {}, last active: {} seconds ago, {} rooms".format(
                         p['presence'], p['last_active_ago'], len(r)
                     ))
 
