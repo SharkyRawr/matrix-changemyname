@@ -1,6 +1,6 @@
 # Matrix ChangeMyName
 
-![Screenshot-20200929000517-859x600](https://user-images.githubusercontent.com/246984/94490922-84adfc00-01e7-11eb-91ba-2cd1a11fc268.png)
+![Screenshot-20200929001406-859x600](https://user-images.githubusercontent.com/246984/94491566-c4291800-01e8-11eb-85d5-c5a4fb983e2a.png)
 
 
 A tool to quickly change your display-name and avatar for any sub-selection of rooms.
