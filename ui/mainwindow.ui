@@ -184,7 +184,7 @@
          <item row="0" column="1">
           <widget class="QPlainTextEdit" name="txtRoomNickname">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -234,7 +234,7 @@
            <item>
             <widget class="QPlainTextEdit" name="txtRoomAvatarMXC">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
