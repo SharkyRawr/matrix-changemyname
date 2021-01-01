@@ -94,6 +94,7 @@ class RoomListNameWorker(QThread):
 class MainWindow(Ui_MainWindow, QMainWindow):
     SETTING_DISPLAYNAME: str = r'display_name'
     SETTING_AVATARURL: str = r'avatar_url'
+    SETTING_TAGS: str = r'tags'
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -126,6 +127,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 persona = json.load(f)
                 self.txtRoomNickname.setPlainText(persona.get(MainWindow.SETTING_DISPLAYNAME, ''))
                 self.txtRoomAvatarMXC.setPlainText(persona.get(MainWindow.SETTING_AVATARURL, ''))
+                self.txtTags.setPlainText(persona.get(MainWindow.SETTING_TAGS, ''))
         except FileNotFoundError:
             pass
         except Exception as ex:
@@ -137,7 +139,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         with open('persona.json', 'w') as f:
             json.dump({
                 MainWindow.SETTING_DISPLAYNAME: self.txtRoomNickname.toPlainText(),
-                MainWindow.SETTING_AVATARURL: self.txtRoomAvatarMXC.toPlainText()
+                MainWindow.SETTING_AVATARURL: self.txtRoomAvatarMXC.toPlainText(),
+                MainWindow.SETTING_TAGS: self.txtTags.toPlainText()
             }, f)
 
     def load_if_available(self) -> None:
@@ -153,6 +156,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def matrix_test(self) -> None:
         if (p := matrix.get_presence()) is not None:
+            # WE ARE LOGGED IN
             self.statusbar.showMessage("Status: {}, last active: {} seconds ago".format(
                 p['presence'], p['last_active_ago']
             ))
@@ -227,8 +231,16 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 if (room := self.model.get_room_by_name(room)) is not None:
                     self.statusbar.showMessage(
                         "Sending event to room {} ...".format(room))
-                    matrix.update_roomstate(
-                        room=room, displayname=roomnick, avatarmxc=roomavatar)
+                    if len(self.txtRoomNickname.toPlainText()) > 1 or len(self.txtRoomAvatarMXC .toPlainText()) > 1:
+                        matrix.update_roomstate(
+                            room=room, displayname=roomnick, avatarmxc=roomavatar)
+
+                    tags = self.txtTags.toPlainText().split(',')
+                    if len(tags) > 0:
+                        for t in tags:
+                            matrix.put_room_tag(
+                                room=room, tag=t.strip()
+                            )
                 else:
                     print("Cannot send events to:", room)
         except Exception as ex:

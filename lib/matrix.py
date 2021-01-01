@@ -12,6 +12,7 @@ GET_ROOM_NAME_API = r'/_matrix/client/r0/rooms/{roomid}/state/m.room.name/'
 GET_ROOM_MEMBERS_API = r'/_matrix/client/r0/rooms/{roomid}/joined_members'
 POST_MEDIA_UPLOAD_API = r'/_matrix/media/r0/upload'
 GET_USER_PROFILE_API = r'/_matrix/client/r0/profile/{userid}'
+PUT_ROOM_TAGS = r'/_matrix/client/r0/user/{userid}/rooms/{roomid}/tags/{tag}'
 
 
 class MatrixUserProfile(object):
@@ -179,3 +180,16 @@ class MatrixAPI(object):
         data: dict = r.json()
         m = MatrixUserProfile(data)
         return m
+
+    def put_room_tag(self, room: Union[MatrixRoom, str], tag: str):
+        room_id: str
+        if type(room) is MatrixRoom:
+            room_id = room.room_id
+        else:
+            room_id = room
+
+        r = self.do("put", PUT_ROOM_TAGS.format(
+                roomid=room_id, userid=self.user_id, tag="u." + tag
+            ), json={}
+        )
+        r.raise_for_status()
