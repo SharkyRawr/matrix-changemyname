@@ -10,3 +10,4 @@ __pycache__
 /ui/login_dialog.py
 /ui/mainwindow.py
 /persona.json
+/emojis
