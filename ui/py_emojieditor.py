@@ -1,7 +1,9 @@
 from lib.matrix import MatrixAPI
 from .emojieditor import Ui_EmojiEditor
 from PyQt5.QtWidgets import QDialog, QLabel, QPlainTextEdit
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtCore import Qt
+from typing import List, Dict
 
 
 class EmojiEditor(Ui_EmojiEditor, QDialog):
@@ -14,11 +16,23 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         self.populateForm()
 
     def populateForm(self):
-        l = self.formLayout
+        g = self.gridLayout
         emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
         
-        emoticons = emotes['emoticons']
+        emoticons: Dict = emotes['emoticons']
+        row = 0
         for k, v in emoticons.items():
-            l.addRow(QPlainTextEdit(k, parent=self), QPlainTextEdit(v['url'], parent=self))
+            g.addWidget(QPlainTextEdit(k, parent=self), row, 0)
+            g.addWidget(QPlainTextEdit(v['url'], parent=self), row, 1)
+            
+            pm = QPixmap()
+            emojiBytes = self.matrix.media_get_thumbnail(v['url'], width=128, height=128)
+            pm.loadFromData(emojiBytes)
+            pm.scaled(128, 128, Qt.KeepAspectRatio)
+            preview = QLabel(self)
+            preview.setPixmap(pm)
+            g.addWidget(preview, row, 2)
+            
+            row +=1
 
     

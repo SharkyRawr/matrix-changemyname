@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
 
@@ -14,6 +15,11 @@ POST_MEDIA_UPLOAD_API = r'/_matrix/media/r0/upload'
 GET_USER_PROFILE_API = r'/_matrix/client/r0/profile/{userid}'
 PUT_ROOM_TAGS = r'/_matrix/client/r0/user/{userid}/rooms/{roomid}/tags/{tag}'
 GETPUT_ACCOUNT_DATA = r'/_matrix/client/r0/user/{userid}/account_data/{type}'
+
+# Media requests
+GET_MEDIA_THUMBNAIL = r'/_matrix/media/r0/thumbnail/{servername}/{mediaid}'
+
+MXC_RE = re.compile(r'^mxc://(.+)/(.+)')
 
 
 class MatrixUserProfile(object):
@@ -201,3 +207,27 @@ class MatrixAPI(object):
         ))
         r.raise_for_status()
         return r.json()
+
+    def put_account_data(self, userid: str, type: str, data: Dict) -> dict:
+        r = self.do('put', GETPUT_ACCOUNT_DATA.format(
+            userid=userid, type=type
+        ), json=data)
+        r.raise_for_status()
+        return r.json()
+
+    def media_get_thumbnail(self, mxcurl: str, width: int, height: int) -> bytes:
+
+        m = MXC_RE.search(mxcurl)
+        if m is None:
+            raise Exception("MXC url could not be parsed")
+        if len(m.groups()) == 2:
+            servername, mediaid = m.groups()
+
+            r = self.do('get', GET_MEDIA_THUMBNAIL.format(
+                servername=servername, mediaid=mediaid
+            ), params=dict(width=width, height=height))
+            r.raise_for_status()
+            content: bytes = r.content
+            return content
+
+        raise Exception("media download failed or some regexp shit i dunno")

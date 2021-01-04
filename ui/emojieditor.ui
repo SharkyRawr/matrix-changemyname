@@ -51,7 +51,7 @@
         <number>0</number>
        </property>
        <item>
-        <layout class="QFormLayout" name="formLayout"/>
+        <layout class="QGridLayout" name="gridLayout"/>
        </item>
       </layout>
      </widget>
