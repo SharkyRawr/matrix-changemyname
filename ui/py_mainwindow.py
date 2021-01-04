@@ -13,6 +13,7 @@ from lib import MatrixAPI, MatrixRoom
 
 from .mainwindow import Ui_MainWindow
 from .py_login_dialog import LoginForm
+from .py_emojieditor import EmojiEditor
 
 matrix = MatrixAPI()
 
@@ -117,6 +118,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         self.cmdLoad.clicked.connect(self.load_persona)
         self.cmdSave.clicked.connect(self.save_persona)
+
+        self.cmdEmojis.clicked.connect(self.show_emoji_window)
 
         self.load_if_available()
 
@@ -245,3 +248,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                     print("Cannot send events to:", room)
         except Exception as ex:
             QMessageBox.critical(self, "Login failed", str(ex))
+
+    @pyqtSlot()
+    def show_emoji_window(self) -> None:
+        dlg = EmojiEditor(parent=self, matrixapi=matrix)
+        dlg.exec()

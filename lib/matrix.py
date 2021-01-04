@@ -13,6 +13,7 @@ GET_ROOM_MEMBERS_API = r'/_matrix/client/r0/rooms/{roomid}/joined_members'
 POST_MEDIA_UPLOAD_API = r'/_matrix/media/r0/upload'
 GET_USER_PROFILE_API = r'/_matrix/client/r0/profile/{userid}'
 PUT_ROOM_TAGS = r'/_matrix/client/r0/user/{userid}/rooms/{roomid}/tags/{tag}'
+GETPUT_ACCOUNT_DATA = r'/_matrix/client/r0/user/{userid}/account_data/{type}'
 
 
 class MatrixUserProfile(object):
@@ -193,3 +194,10 @@ class MatrixAPI(object):
             ), json={}
         )
         r.raise_for_status()
+
+    def get_account_data(self, userid: str, type: str) -> dict:
+        r = self.do('get', GETPUT_ACCOUNT_DATA.format(
+            userid=userid, type=type
+        ))
+        r.raise_for_status()
+        return r.json()
