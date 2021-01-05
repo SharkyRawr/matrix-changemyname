@@ -3,42 +3,25 @@ from lib.matrix import MatrixAPI
 from .emojieditor import Ui_EmojiEditor
 from PyQt5.QtWidgets import QDialog, QLabel, QPlainTextEdit
 from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal
 from typing import List, Dict, Optional
 from lib.matrix import MXC_RE
 
 EMOJI_DIR = r'emojis'
 
+class EmojiDownloadThread(QThread):
+    emojiFinished = pyqtSignal(int, bytes, name="emojiFinished")
 
-class EmojiEditor(Ui_EmojiEditor, QDialog):
-    def __init__(self, matrixapi: MatrixAPI, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.setupUi(self)
-        self.setWindowIcon(QIcon(":/icon.png"))
+    def __init__(self, parent: Optional[QObject], matrix: MatrixAPI, emojilist: Dict) -> None:
+        super().__init__(parent)
+        self.emojilist = emojilist
+        self.matrix = matrix
 
-        self.matrix = matrixapi
-        self.populateForm()
-
-    def populateForm(self):
-        g = self.gridLayout
-        emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
-        
-        emoticons: Dict = emotes['emoticons']
-        row = 0
-        for k, v in emoticons.items():
-            g.addWidget(QPlainTextEdit(k, parent=self), row, 0)
-            g.addWidget(QPlainTextEdit(v['url'], parent=self), row, 1)
-            
-            pm = QPixmap()
-            emojiBytes = self.getCachedEmoji(v['url'], width=128, height=128)
-            pm.loadFromData(emojiBytes)
-            pm = pm.scaled(128, 128, Qt.KeepAspectRatio)
-            preview = QLabel(self)
-            preview.setPixmap(pm)
-            g.addWidget(preview, row, 2)
-            
-            row +=1
-
+    def run(self):
+        for i, mxc in self.emojilist.items():
+            print(mxc)
+            emojiBytes = self.getCachedEmoji(mxc, width=128, height=128)
+            self.emojiFinished.emit(i, emojiBytes)
 
     def getCachedEmoji(self, mxcurl, width: int, height: int) -> Optional[bytes]:
         p = os.path
@@ -59,6 +42,49 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
             with open(mediapath, 'wb') as f:
                 f.write(emojiBytes)
             return emojiBytes
+            
+
+
+class EmojiEditor(Ui_EmojiEditor, QDialog):
+    def __init__(self, matrixapi: MatrixAPI, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.setupUi(self)
+        self.setWindowIcon(QIcon(":/icon.png"))
+
+        self.matrix = matrixapi
+        self.populateForm()
+
+    def populateForm(self):
+        g = self.gridLayout
+        emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
+        
+        emoticons: Dict = emotes['emoticons']
+        emoRow = {}
+        row = 0
+        for k, v in emoticons.items():
+            g.addWidget(QPlainTextEdit(k, parent=self), row, 0)
+            g.addWidget(QPlainTextEdit(v['url'], parent=self), row, 1)
+
+            emoRow[row] = v["url"]
+            row +=1
+
+
+        def updateRowPixmap(row, bytes):
+            pm = QPixmap()
+            pm.loadFromData(bytes)
+            pm = pm.scaled(128, 128, Qt.KeepAspectRatio)
+            preview = QLabel(self)
+            preview.setPixmap(pm)
+            self.gridLayout.addWidget(preview, row, 2)
+
+        thr = EmojiDownloadThread(self, self.matrix, emoRow)
+        thr.emojiFinished.connect(updateRowPixmap)
+        thr.start()
+
+        
+
+
+    
 
         
 
