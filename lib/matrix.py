@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 from urllib.parse import urljoin
 
 import requests
@@ -215,7 +215,7 @@ class MatrixAPI(object):
         r.raise_for_status()
         return r.json()
 
-    def media_get_thumbnail(self, mxcurl: str, width: int, height: int) -> bytes:
+    def media_get_thumbnail(self, mxcurl: str, width: int, height: int) -> Tuple[bytes, str]:
 
         m = MXC_RE.search(mxcurl)
         if m is None:
@@ -228,6 +228,6 @@ class MatrixAPI(object):
             ), params=dict(width=width, height=height))
             r.raise_for_status()
             content: bytes = r.content
-            return content
+            return (content, r.headers['content-type'])
 
         raise Exception("media download failed or some regexp shit i dunno")

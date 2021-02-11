@@ -70,12 +70,21 @@ class RoomListModel(QAbstractListModel):
 
 
 class RoomListNameWorker(QThread):
+    KeepWorking = True
+
     def __init__(self, parent: typing.Optional['QObject'], roomlistmodel: RoomListModel) -> None:
         super().__init__(parent)
         self.model = roomlistmodel
+        self.KeepWorking = True
+
+    def abort_gracefully(self):
+        self.KeepWorking = False
 
     def run(self):
         for r in self.model.rooms:
+            if self.KeepWorking == False:
+                break
+
             if not self.model.update_room_name(r):
                 print(r)
                 try:
@@ -122,6 +131,12 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.cmdEmojis.clicked.connect(self.show_emoji_window)
 
         self.load_if_available()
+
+    @pyqtSlot()
+    def closeEvent(self, event):
+        self._t.abort_gracefully()
+        self._t.wait(1000)
+        event.accept()
 
     @pyqtSlot()
     def load_persona(self) -> None:

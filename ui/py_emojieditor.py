@@ -1,4 +1,6 @@
 import os
+import mimetypes
+from pathlib import Path
 from lib.matrix import MatrixAPI
 from .emojieditor import Ui_EmojiEditor
 from PyQt5.QtWidgets import QDialog, QLabel, QPlainTextEdit
@@ -33,13 +35,19 @@ class EmojiDownloadThread(QThread):
             raise Exception("MXC url could not be parsed")
         if len(m.groups()) == 2:
             servername, mediaid = m.groups()
-            mediapath = p.join(EMOJI_DIR, mediaid + ".bin")
-            if p.lexists(mediapath):
+            mediapath = Path()
+            mediapath = mediapath.joinpath(EMOJI_DIR, mediaid)
+
+            if mediaid in os.listdir(EMOJI_DIR):
                 with open(mediapath, 'rb') as f:
                     return f.read()
 
-            emojiBytes = self.matrix.media_get_thumbnail(mxcurl, width=width, height=height)
-            with open(mediapath, 'wb') as f:
+            emojiBytes, content_type = self.matrix.media_get_thumbnail(mxcurl, width=width, height=height)
+            ext = mimetypes.guess_extension(content_type) or '.bin'
+
+            mediapath = mediapath.with_suffix(ext)
+
+            with open(str(mediapath), 'wb') as f:
                 f.write(emojiBytes)
             return emojiBytes
             
