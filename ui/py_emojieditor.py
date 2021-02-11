@@ -1,19 +1,20 @@
+import mimetypes
 import os
 import re
-import mimetypes
 from pathlib import Path
-from lib.matrix import MatrixAPI
-from .emojieditor import Ui_EmojiEditor
+from typing import Dict, List, Optional, Tuple
+
+from lib.matrix import MXC_RE, MatrixAPI
+from PyQt5.QtCore import QMutex, QObject, Qt, QThread, pyqtSignal, pyqtSlot, QSize
+from PyQt5.QtGui import QIcon, QMovie, QPixmap
 from PyQt5.QtWidgets import QDialog, QLabel, QPlainTextEdit
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal, pyqtSlot, QMutex
-from typing import List, Dict, Optional
-from lib.matrix import MXC_RE
+
+from .emojieditor import Ui_EmojiEditor
 
 EMOJI_DIR = r'emojis'
 
 class EmojiDownloadThread(QThread):
-    emojiFinished = pyqtSignal(int, bytes, name="emojiFinished")
+    emojiFinished = pyqtSignal(int, bytes, str, str, name="emojiFinished")
     keepRunning = True
 
     def __init__(self, parent: Optional[QObject], matrix: MatrixAPI, emojilist: Dict) -> None:
@@ -30,10 +31,10 @@ class EmojiDownloadThread(QThread):
             if self.keepRunning == False:
                 break
 
-            emojiBytes = self.getCachedEmoji(mxc, width=128, height=128)
-            self.emojiFinished.emit(i, emojiBytes)
+            emojiBytes, mimetype, filepath = self.getCachedEmoji(mxc, width=128, height=128)
+            self.emojiFinished.emit(i, emojiBytes, mimetype, filepath)
 
-    def getCachedEmoji(self, mxcurl, width: int, height: int) -> Optional[bytes]:
+    def getCachedEmoji(self, mxcurl, width: int, height: int) -> Tuple[bytes, str, str]:
         m = MXC_RE.search(mxcurl)
         if m is None:
             raise Exception("MXC url could not be parsed")
@@ -42,25 +43,27 @@ class EmojiDownloadThread(QThread):
             mediapath = Path()
             mediapath = mediapath.joinpath(EMOJI_DIR, mediaid)
 
+            # check if the file is already cached locally
             for p in os.listdir(EMOJI_DIR):
                 pm = re.match(r'(.+)\.(.+)', p)
                 if pm:
                     filename, ext = pm.groups()
                     if mediaid in filename:
                         print("Cached emoji", mediaid)
+                        mimetype, _ = mimetypes.guess_type(p)
+                        mimetype = mimetype or 'application/octet-stream'
                         with open(os.path.join(EMOJI_DIR, p), 'rb') as f:
-                            return f.read()
+                            return f.read(), mimetype, os.path.join(EMOJI_DIR, p),
             
             print("Downloading emoji", mediaid)
-
             emojiBytes, content_type = self.matrix.media_get_thumbnail(mxcurl, width=width, height=height)
             ext = mimetypes.guess_extension(content_type) or '.bin'
-
             mediapath = mediapath.with_suffix(ext)
 
             with open(str(mediapath), 'wb') as f:
                 f.write(emojiBytes)
-            return emojiBytes
+            return emojiBytes, content_type, str(mediapath)
+        raise Exception("we fell through, what are we doing here??")
             
 
 
@@ -100,25 +103,28 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
             row +=1
 
 
-        def updateRowPixmap(row, bytes):
-            pm = QPixmap()
-            pm.loadFromData(bytes)
-            pm = pm.scaled(128, 128, Qt.KeepAspectRatio)
+        def updateRowPixmap(row, bytes, mimetype, filepath):
             preview = QLabel(self)
-            preview.setPixmap(pm)
+            preview.setMinimumSize(128, 128)
+            preview.setMaximumSize(128, 128)
+
+            if 'image/gif' in mimetype:
+                movie = QMovie(filepath)
+                # @todo: movie.setScaledSize() to something aspect ratio correct
+                preview.setMovie(movie)
+                movie.start()
+            else:
+                pm = QPixmap()
+                pm.loadFromData(bytes)
+                pm = pm.scaled(128, 128, Qt.KeepAspectRatio)    
+                preview.setPixmap(pm)
+
             self.updateRowMutex.lock()
             self.gridLayout.addWidget(preview, row, 2)
             self.updateRowMutex.unlock()
+        
 
         self.emoji_dl_thr = EmojiDownloadThread(self, self.matrix, emoRow)
         self.emoji_dl_thr.emojiFinished.connect(updateRowPixmap)
         self.emoji_dl_thr.start()
 
-        
-
-
-    
-
-        
-
-    
