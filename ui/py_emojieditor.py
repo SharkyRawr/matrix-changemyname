@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Tuple
 from lib.matrix import MXC_RE, MatrixAPI
 from PyQt5.QtCore import QMutex, QObject, Qt, QThread, pyqtSignal, pyqtSlot, QSize
 from PyQt5.QtGui import QIcon, QMovie, QPixmap
-from PyQt5.QtWidgets import QDialog, QLabel, QPlainTextEdit
+from PyQt5.QtWidgets import QDialog, QLabel, QPlainTextEdit, QFileDialog, QMessageBox
 
 from .emojieditor import Ui_EmojiEditor
 
@@ -76,6 +76,16 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         self.setWindowIcon(QIcon(":/icon.png"))
         self.updateRowMutex = QMutex()
 
+        def importOverwrite():
+            pass
+
+        def importAppend():
+            pass
+
+        self.actionImport_overwrite.triggered.connect(importOverwrite)
+        self.actionImport_append.triggered.connect(importAppend)
+        self.actionExport.triggered.connect(self.exportEmojis)
+
         if not os.path.lexists(EMOJI_DIR) and not os.path.isdir(EMOJI_DIR):
             os.mkdir(EMOJI_DIR)
 
@@ -87,6 +97,26 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         self.emoji_dl_thr.abort_gracefully()
         self.emoji_dl_thr.wait(1000)
         event.accept()
+
+    @pyqtSlot()
+    def exportEmojis(self):
+        export_dir = QFileDialog.getExistingDirectory(self, "Choose export destination directory", "", QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly)
+        if export_dir == "":
+            return
+        print("Export dir:", export_dir)
+
+        # check for existing files in directory
+        # todo: check if listdir also contains "." and ".." which may throw off the len()
+        if len(os.listdir(export_dir)) > 0:
+            result = QMessageBox.warning(self, "Directory contains existing files", "Warning! The directory you picked already contains files. If you continue some of your files may get overwritten by emojis of the same name.\nDo you wish to continue?", QMessageBox.Yes | QMessageBox.No)
+            if result == QMessageBox.No:
+                # No, don't continue
+                return
+        
+        #user_emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
+        #emoticons: Dict = user_emotes['emoticons']
+        # todo: actually download
+        
 
     def populateForm(self):
         g = self.gridLayout
