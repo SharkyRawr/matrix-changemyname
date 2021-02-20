@@ -89,6 +89,16 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         if not os.path.lexists(EMOJI_DIR) and not os.path.isdir(EMOJI_DIR):
             os.mkdir(EMOJI_DIR)
 
+        def action_overwrite():
+            pass
+
+        def action_append():
+            pass
+
+        self.actionImport_overwrite.triggered.connect(action_overwrite)
+        self.actionImport_append.triggered.connect(action_append)
+        self.actionExport.triggered.connect(self.exportEmojis)
+
         self.matrix = matrixapi
         self.populateForm()
 
@@ -157,4 +167,7 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         self.emoji_dl_thr = EmojiDownloadThread(self, self.matrix, emoRow)
         self.emoji_dl_thr.emojiFinished.connect(updateRowPixmap)
         self.emoji_dl_thr.start()
+
+    def exportEmojis(self):
+        pass
 
