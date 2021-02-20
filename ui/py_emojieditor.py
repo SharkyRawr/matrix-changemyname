@@ -10,6 +10,7 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap
 from PyQt5.QtWidgets import QDialog, QLabel, QPlainTextEdit, QFileDialog, QMessageBox
 
 from .emojieditor import Ui_EmojiEditor
+from .ImportExportHandlerAndProgressDialog import Ui_ImportExportHandlerAndProgressDialog
 
 EMOJI_DIR = r'emojis'
 
@@ -64,7 +65,38 @@ class EmojiDownloadThread(QThread):
                 f.write(emojiBytes)
             return emojiBytes, content_type, str(mediapath)
         raise Exception("we fell through, what are we doing here??")
-            
+
+
+class ImportExportAction(object):
+        EXPORT = 0
+        IMPORT = 1
+        IMPORT_OVERWRITE = 2
+        directory: Optional[str] = ""
+
+        def __init__(self, action: int, directory: Optional[str]) -> None:
+            self.action = action
+            self.directory = directory
+
+        def __str__(self) -> str:
+            action = "unkn"
+            if self.action == ImportExportAction.EXPORT:
+                action = "Export"
+            elif self.action == ImportExportAction.IMPORT:
+                action = "Import"
+            elif self.action == ImportExportAction.IMPORT_OVERWRITE:
+                action = "Import (overwrite)"
+            return f"{action} on {self.directory}"
+
+class ImportExportHandlerAndProgressDialog(Ui_ImportExportHandlerAndProgressDialog, QDialog):
+    def __init__(self, matrixapi: MatrixAPI, action: ImportExportAction, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.setupUi(self)
+        self.setWindowIcon(QIcon(":/icon.png"))
+
+        self.myAction = action
+        
+        self.txtLog.append(str(self.myAction) + "\n")
+        self.txtLog.append("We are working on it, please stand by!\n")
 
 
 class EmojiEditor(Ui_EmojiEditor, QDialog):
@@ -116,6 +148,8 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         #user_emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
         #emoticons: Dict = user_emotes['emoticons']
         # todo: actually download
+        d = ImportExportHandlerAndProgressDialog(self.matrix, action=ImportExportAction(ImportExportAction.EXPORT, directory=export_dir), parent=self)
+        d.exec_()
         
 
     def populateForm(self):
