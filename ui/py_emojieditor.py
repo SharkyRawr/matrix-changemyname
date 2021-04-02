@@ -3,6 +3,9 @@ import os
 import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+from PyQt5.QtCore import QCoreApplication, QFile
+
+from PyQt5.QtWidgets import QApplication
 
 from lib.matrix import MXC_RE, MatrixAPI
 from PyQt5.QtCore import QMutex, QObject, Qt, QThread, pyqtSignal, pyqtSlot, QSize
@@ -98,6 +101,10 @@ class ImportExportHandlerAndProgressDialog(Ui_ImportExportHandlerAndProgressDial
         self.txtLog.append(str(self.myAction) + "\n")
         self.txtLog.append("We are working on it, please stand by!\n")
 
+        #user_emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
+        #emoticons: Dict = user_emotes['emoticons']
+        # todo: actually download
+
 
 class EmojiEditor(Ui_EmojiEditor, QDialog):
     updateRowMutex = QMutex()
@@ -108,11 +115,18 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         self.setWindowIcon(QIcon(":/icon.png"))
         self.updateRowMutex = QMutex()
 
+        def select_files() -> List[str]:
+            fd = QFileDialog(self, "Choose emojis", QCoreApplication.applicationDirPath())
+            fd.setNameFilter('*.png')
+            fd.setFileMode(QFileDialog.FileMode.ExistingFiles)
+            if fd.exec_():
+                print(fd.selectedFiles())
+
         def importOverwrite():
-            pass
+            files = select_files()
 
         def importAppend():
-            pass
+            files = select_files()
 
         self.actionImport_overwrite.triggered.connect(importOverwrite)
         self.actionImport_append.triggered.connect(importAppend)
@@ -145,9 +159,6 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
                 # No, don't continue
                 return
         
-        #user_emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
-        #emoticons: Dict = user_emotes['emoticons']
-        # todo: actually download
         d = ImportExportHandlerAndProgressDialog(self.matrix, action=ImportExportAction(ImportExportAction.EXPORT, directory=export_dir), parent=self)
         d.exec_()
         
