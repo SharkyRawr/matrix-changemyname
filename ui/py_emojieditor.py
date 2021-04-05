@@ -137,8 +137,22 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
             self.matrix.put_account_data(self.matrix.user_id or '', 'im.ponies.user_emotes', emotes)
             self.populateForm()
 
+        # @todo: simplify this and extract a method or something? i dunno im just a dumb fox 🦊
         def importAppend():
             files = select_files()
+            emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
+            for file in files:
+                basename = os.path.basename(file)
+                nakedfilename, _ = os.path.splitext(basename)
+                emojiname = ':' + nakedfilename + ':'
+                if emojiname in emotes: continue
+                mxc = self.matrix.upload_media(file)
+                emotes['emoticons'][emojiname] = {
+                        'url': mxc
+                }
+            self.matrix.put_account_data(self.matrix.user_id or '', 'im.ponies.user_emotes', emotes)
+            self.populateForm()
+
 
         self.actionImport_overwrite.triggered.connect(importOverwrite)
         self.actionImport_append.triggered.connect(importAppend)
