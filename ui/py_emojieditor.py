@@ -3,18 +3,19 @@ import os
 import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from PyQt5 import QtCore
-from PyQt5.QtCore import QCoreApplication, QFile, QTimer
-
-from PyQt5.QtWidgets import QApplication, QProgressBar, QVBoxLayout
 
 from lib.matrix import MXC_RE, MatrixAPI
-from PyQt5.QtCore import QMutex, QObject, Qt, QThread, pyqtSignal, pyqtSlot, QSize
+from PyQt5 import QtCore
+from PyQt5.QtCore import (QCoreApplication, QFile, QMutex, QObject, QSize, Qt,
+                          QThread, QTimer, pyqtSignal, pyqtSlot)
 from PyQt5.QtGui import QIcon, QMovie, QPixmap
-from PyQt5.QtWidgets import QDialog, QLabel, QPlainTextEdit, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import (QApplication, QDialog, QFileDialog, QLabel,
+                             QMessageBox, QPlainTextEdit, QProgressBar,
+                             QVBoxLayout)
 
 from .emojieditor import Ui_EmojiEditor
-from .ImportExportHandlerAndProgressDialog import Ui_ImportExportHandlerAndProgressDialog
+from .ImportExportHandlerAndProgressDialog import \
+    Ui_ImportExportHandlerAndProgressDialog
 
 EMOJI_DIR = r'emojis'
 
