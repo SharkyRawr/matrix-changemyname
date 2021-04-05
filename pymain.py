@@ -1,5 +1,7 @@
 import sys
+
 from PyQt5.QtWidgets import QApplication
+
 
 def compileUI():
     from PyQt5.uic import compileUiDir

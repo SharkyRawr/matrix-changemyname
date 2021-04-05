@@ -2,6 +2,7 @@ import json
 import typing
 from typing import Dict, List, Optional, Union
 
+from lib import MatrixAPI, MatrixRoom
 from PyQt5.QtCore import (QAbstractListModel, QDir, QModelIndex, QObject,
                           QSortFilterProxyModel, Qt, QThread, QTimer, QVariant,
                           pyqtSlot)
@@ -9,11 +10,9 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from requests.models import HTTPError
 
-from lib import MatrixAPI, MatrixRoom
-
 from .mainwindow import Ui_MainWindow
-from .py_login_dialog import LoginForm
 from .py_emojieditor import EmojiEditor
+from .py_login_dialog import LoginForm
 
 matrix = MatrixAPI()
 
@@ -115,6 +114,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         self.proxy = QSortFilterProxyModel(self)
 
+        @pyqtSlot()
         def set_filter_text():
             self.proxy.setFilterRegExp(self.txtFilter.toPlainText())
 
@@ -145,9 +145,12 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         try:
             with open('persona.json') as f:
                 persona = json.load(f)
-                self.txtRoomNickname.setPlainText(persona.get(MainWindow.SETTING_DISPLAYNAME, ''))
-                self.txtRoomAvatarMXC.setPlainText(persona.get(MainWindow.SETTING_AVATARURL, ''))
-                self.txtTags.setPlainText(persona.get(MainWindow.SETTING_TAGS, ''))
+                self.txtRoomNickname.setPlainText(
+                    persona.get(MainWindow.SETTING_DISPLAYNAME, ''))
+                self.txtRoomAvatarMXC.setPlainText(
+                    persona.get(MainWindow.SETTING_AVATARURL, ''))
+                self.txtTags.setPlainText(
+                    persona.get(MainWindow.SETTING_TAGS, ''))
         except FileNotFoundError:
             pass
         except Exception as ex:
