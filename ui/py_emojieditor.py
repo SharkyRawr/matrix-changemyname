@@ -3,9 +3,10 @@ import os
 import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from PyQt5.QtCore import QCoreApplication, QFile
+from PyQt5 import QtCore
+from PyQt5.QtCore import QCoreApplication, QFile, QTimer
 
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QProgressBar, QVBoxLayout
 
 from lib.matrix import MXC_RE, MatrixAPI
 from PyQt5.QtCore import QMutex, QObject, Qt, QThread, pyqtSignal, pyqtSlot, QSize
@@ -16,6 +17,7 @@ from .emojieditor import Ui_EmojiEditor
 from .ImportExportHandlerAndProgressDialog import Ui_ImportExportHandlerAndProgressDialog
 
 EMOJI_DIR = r'emojis'
+
 
 class EmojiDownloadThread(QThread):
     emojiFinished = pyqtSignal(int, bytes, str, str, name="emojiFinished")
@@ -35,7 +37,8 @@ class EmojiDownloadThread(QThread):
             if self.keepRunning == False:
                 break
 
-            emojiBytes, mimetype, filepath = self.getCachedEmoji(mxc, width=128, height=128)
+            emojiBytes, mimetype, filepath = self.getCachedEmoji(
+                mxc, width=128, height=128)
             self.emojiFinished.emit(i, emojiBytes, mimetype, filepath)
 
     def getCachedEmoji(self, mxcurl, width: int, height: int) -> Tuple[bytes, str, str]:
@@ -58,9 +61,10 @@ class EmojiDownloadThread(QThread):
                         mimetype = mimetype or 'application/octet-stream'
                         with open(os.path.join(EMOJI_DIR, p), 'rb') as f:
                             return f.read(), mimetype, os.path.join(EMOJI_DIR, p),
-            
+
             print("Downloading emoji", mediaid)
-            emojiBytes, content_type = self.matrix.media_get_thumbnail(mxcurl, width=width, height=height)
+            emojiBytes, content_type = self.matrix.media_get_thumbnail(
+                mxcurl, width=width, height=height)
             ext = mimetypes.guess_extension(content_type) or '.bin'
             mediapath = mediapath.with_suffix(ext)
 
@@ -71,24 +75,25 @@ class EmojiDownloadThread(QThread):
 
 
 class ImportExportAction(object):
-        EXPORT = 0
-        IMPORT = 1
-        IMPORT_OVERWRITE = 2
-        directory: Optional[str] = ""
+    EXPORT = 0
+    IMPORT = 1
+    IMPORT_OVERWRITE = 2
+    directory: Optional[str] = ""
 
-        def __init__(self, action: int, directory: Optional[str]) -> None:
-            self.action = action
-            self.directory = directory
+    def __init__(self, action: int, directory: Optional[str]) -> None:
+        self.action = action
+        self.directory = directory
 
-        def __str__(self) -> str:
-            action = "unkn"
-            if self.action == ImportExportAction.EXPORT:
-                action = "Export"
-            elif self.action == ImportExportAction.IMPORT:
-                action = "Import"
-            elif self.action == ImportExportAction.IMPORT_OVERWRITE:
-                action = "Import (overwrite)"
-            return f"{action} on {self.directory}"
+    def __str__(self) -> str:
+        action = "unkn"
+        if self.action == ImportExportAction.EXPORT:
+            action = "Export"
+        elif self.action == ImportExportAction.IMPORT:
+            action = "Import"
+        elif self.action == ImportExportAction.IMPORT_OVERWRITE:
+            action = "Import (overwrite)"
+        return f"{action} on {self.directory}"
+
 
 class ImportExportHandlerAndProgressDialog(Ui_ImportExportHandlerAndProgressDialog, QDialog):
     def __init__(self, matrixapi: MatrixAPI, action: ImportExportAction, *args, **kwargs) -> None:
@@ -97,13 +102,82 @@ class ImportExportHandlerAndProgressDialog(Ui_ImportExportHandlerAndProgressDial
         self.setWindowIcon(QIcon(":/icon.png"))
 
         self.myAction = action
-        
+
         self.txtLog.append(str(self.myAction) + "\n")
         self.txtLog.append("We are working on it, please stand by!\n")
 
         #user_emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
         #emoticons: Dict = user_emotes['emoticons']
         # todo: actually download
+
+
+class EmojiUploaderTask(QDialog):
+    shouldWork = True
+    append = False
+    matrix = None
+
+    def __init__(self, filenames: List[str], append: bool, matrix: MatrixAPI, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.emoji_filenames_to_upload = filenames
+        self.shouldWork = True
+        self.append = append
+        self.matrix = matrix
+
+        self.emotes = self.matrix.get_account_data(
+            self.matrix.user_id or '', "im.ponies.user_emotes")
+
+        self.setupUI()
+
+    def setupUI(self):
+        self.setFixedSize(320, 200)
+        self.setWindowTitle("Uploading emojis ...")
+        self.setModal(True)
+        self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        self.timer = QTimer(self)
+        self.timer.setInterval(200)
+        self.timer.timeout.connect(self.work)
+        self.timer.start()
+
+        self.pb = QProgressBar(self)
+        self.pb.setMinimum(0)
+        self.pb.setMaximum(len(self.emoji_filenames_to_upload))
+        layout.addWidget(self.pb)
+
+    @pyqtSlot()
+    def work(self):
+        if len(self.emoji_filenames_to_upload) <= 0:
+            self.work_done()
+            return
+
+        file = self.emoji_filenames_to_upload.pop()
+
+        # update progress
+        self.pb.setValue(self.pb.maximum() -
+                         len(self.emoji_filenames_to_upload))
+
+        basename = os.path.basename(file)
+        nakedfilename, _ = os.path.splitext(basename)
+        emojiname = ':' + nakedfilename + ':'
+
+        if self.append and emojiname in self.emotes:
+            return
+
+        mxc = self.matrix.upload_media(file)
+        self.emotes['emoticons'][emojiname] = {
+            'url': mxc
+        }
+
+    @pyqtSlot()
+    def work_done(self):
+        self.timer.stop()
+        self.matrix.put_account_data(
+            self.matrix.user_id or '', 'im.ponies.user_emotes', self.emotes)
+        self.accept()
 
 
 class EmojiEditor(Ui_EmojiEditor, QDialog):
@@ -116,7 +190,8 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         self.updateRowMutex = QMutex()
 
         def select_files() -> List[str]:
-            fd = QFileDialog(self, "Choose emojis", QCoreApplication.applicationDirPath())
+            fd = QFileDialog(self, "Choose emojis",
+                             QCoreApplication.applicationDirPath())
             fd.setNameFilter('*.png')
             fd.setFileMode(QFileDialog.FileMode.ExistingFiles)
             if fd.exec_():
@@ -125,34 +200,18 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
 
         def importOverwrite():
             files = select_files()
-            emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
-            for file in files:
-                basename = os.path.basename(file)
-                nakedfilename, _ = os.path.splitext(basename)
-                emojiname = ':' + nakedfilename + ':'
-                mxc = self.matrix.upload_media(file)
-                emotes['emoticons'][emojiname] = {
-                        'url': mxc
-                }
-            self.matrix.put_account_data(self.matrix.user_id or '', 'im.ponies.user_emotes', emotes)
-            self.populateForm()
+            dlg = EmojiUploaderTask(
+                files, append=False, matrix=self.matrix, parent=self)
+            if dlg.exec_():
+                self.populateForm()
 
         # @todo: simplify this and extract a method or something? i dunno im just a dumb fox 🦊
         def importAppend():
             files = select_files()
-            emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
-            for file in files:
-                basename = os.path.basename(file)
-                nakedfilename, _ = os.path.splitext(basename)
-                emojiname = ':' + nakedfilename + ':'
-                if emojiname in emotes: continue
-                mxc = self.matrix.upload_media(file)
-                emotes['emoticons'][emojiname] = {
-                        'url': mxc
-                }
-            self.matrix.put_account_data(self.matrix.user_id or '', 'im.ponies.user_emotes', emotes)
-            self.populateForm()
-
+            dlg = EmojiUploaderTask(
+                files, append=True, matrix=self.matrix, parent=self)
+            if dlg.exec_():
+                self.populateForm()
 
         self.actionImport_overwrite.triggered.connect(importOverwrite)
         self.actionImport_append.triggered.connect(importAppend)
@@ -172,7 +231,8 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
 
     @pyqtSlot()
     def exportEmojis(self):
-        export_dir = QFileDialog.getExistingDirectory(self, "Choose export destination directory", "", QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly)
+        export_dir = QFileDialog.getExistingDirectory(
+            self, "Choose export destination directory", "", QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly)
         if export_dir == "":
             return
         print("Export dir:", export_dir)
@@ -180,19 +240,21 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         # check for existing files in directory
         # todo: check if listdir also contains "." and ".." which may throw off the len()
         if len(os.listdir(export_dir)) > 0:
-            result = QMessageBox.warning(self, "Directory contains existing files", "Warning! The directory you picked already contains files. If you continue some of your files may get overwritten by emojis of the same name.\nDo you wish to continue?", QMessageBox.Yes | QMessageBox.No)
+            result = QMessageBox.warning(self, "Directory contains existing files",
+                                         "Warning! The directory you picked already contains files. If you continue some of your files may get overwritten by emojis of the same name.\nDo you wish to continue?", QMessageBox.Yes | QMessageBox.No)
             if result == QMessageBox.No:
                 # No, don't continue
                 return
-        
-        d = ImportExportHandlerAndProgressDialog(self.matrix, action=ImportExportAction(ImportExportAction.EXPORT, directory=export_dir), parent=self)
+
+        d = ImportExportHandlerAndProgressDialog(self.matrix, action=ImportExportAction(
+            ImportExportAction.EXPORT, directory=export_dir), parent=self)
         d.exec_()
-        
 
     def populateForm(self):
         g = self.gridLayout
-        emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
-        
+        emotes = self.matrix.get_account_data(
+            self.matrix.user_id or '', "im.ponies.user_emotes")
+
         emoticons: Dict = emotes['emoticons']
         emoRow = {}
         row = 0
@@ -201,8 +263,7 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
             g.addWidget(QPlainTextEdit(v['url'], parent=self), row, 1)
 
             emoRow[row] = v["url"]
-            row +=1
-
+            row += 1
 
         def updateRowPixmap(row, bytes, mimetype, filepath):
             preview = QLabel(self)
@@ -217,15 +278,13 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
             else:
                 pm = QPixmap()
                 pm.loadFromData(bytes)
-                pm = pm.scaled(128, 128, Qt.KeepAspectRatio)    
+                pm = pm.scaled(128, 128, Qt.KeepAspectRatio)
                 preview.setPixmap(pm)
 
             self.updateRowMutex.lock()
             self.gridLayout.addWidget(preview, row, 2)
             self.updateRowMutex.unlock()
-        
 
         self.emoji_dl_thr = EmojiDownloadThread(self, self.matrix, emoRow)
         self.emoji_dl_thr.emojiFinished.connect(updateRowPixmap)
         self.emoji_dl_thr.start()
-
