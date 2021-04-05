@@ -193,7 +193,7 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         def select_files() -> List[str]:
             fd = QFileDialog(self, "Choose emojis",
                              QCoreApplication.applicationDirPath())
-            fd.setNameFilter('*.png')
+            fd.setNameFilter('*.png *.jpg *.gif')
             fd.setFileMode(QFileDialog.FileMode.ExistingFiles)
             if fd.exec_():
                 return fd.selectedFiles()
@@ -201,6 +201,7 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
 
         def importOverwrite():
             files = select_files()
+            if len(files) <= 0: return
             dlg = EmojiUploaderTask(
                 files, append=False, matrix=self.matrix, parent=self)
             if dlg.exec_():
@@ -209,6 +210,7 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         # @todo: simplify this and extract a method or something? i dunno im just a dumb fox 🦊
         def importAppend():
             files = select_files()
+            if len(files) <= 0: return
             dlg = EmojiUploaderTask(
                 files, append=True, matrix=self.matrix, parent=self)
             if dlg.exec_():
