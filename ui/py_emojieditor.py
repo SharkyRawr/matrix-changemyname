@@ -120,10 +120,22 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
             fd.setNameFilter('*.png')
             fd.setFileMode(QFileDialog.FileMode.ExistingFiles)
             if fd.exec_():
-                print(fd.selectedFiles())
+                return fd.selectedFiles()
+            return []
 
         def importOverwrite():
             files = select_files()
+            emotes = self.matrix.get_account_data(self.matrix.user_id or '', "im.ponies.user_emotes")
+            for file in files:
+                basename = os.path.basename(file)
+                nakedfilename, _ = os.path.splitext(basename)
+                emojiname = ':' + nakedfilename + ':'
+                mxc = self.matrix.upload_media(file)
+                emotes['emoticons'][emojiname] = {
+                        'url': mxc
+                }
+            self.matrix.put_account_data(self.matrix.user_id or '', 'im.ponies.user_emotes', emotes)
+            self.populateForm()
 
         def importAppend():
             files = select_files()
