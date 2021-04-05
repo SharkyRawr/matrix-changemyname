@@ -10,7 +10,7 @@ def compileUI():
 
 if __name__ == "__main__":
 
-    if __debug__:
+    if not 'frozen' in dir(sys):
         compileUI()
     from ui.py_mainwindow import MainWindow
 

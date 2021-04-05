@@ -105,6 +105,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     SETTING_DISPLAYNAME: str = r'display_name'
     SETTING_AVATARURL: str = r'avatar_url'
     SETTING_TAGS: str = r'tags'
+    _t = None
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -134,8 +135,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     @pyqtSlot()
     def closeEvent(self, event):
-        self._t.abort_gracefully()
-        self._t.wait(1000)
+        if self._t:
+            self._t.abort_gracefully()
+            self._t.wait(1000)
         event.accept()
 
     @pyqtSlot()
