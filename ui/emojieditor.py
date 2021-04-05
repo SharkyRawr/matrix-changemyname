@@ -62,7 +62,7 @@ class Ui_EmojiEditor(object):
 
     def retranslateUi(self, EmojiEditor):
         _translate = QtCore.QCoreApplication.translate
-        EmojiEditor.setWindowTitle(_translate("EmojiEditor", "Dialog"))
+        EmojiEditor.setWindowTitle(_translate("EmojiEditor", "Emoji editor"))
         self.menuFile.setTitle(_translate("EmojiEditor", "File"))
         self.actionImport_overwrite.setText(_translate("EmojiEditor", "Import (overwrite)"))
         self.actionImport_append.setText(_translate("EmojiEditor", "Import (append)"))
