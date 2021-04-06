@@ -32,8 +32,8 @@
       <property name="title">
        <string>File</string>
       </property>
-      <addaction name="actionImport_overwrite"/>
       <addaction name="actionImport_append"/>
+      <addaction name="actionImport_overwrite"/>
       <addaction name="separator"/>
       <addaction name="actionExport"/>
       <addaction name="separator"/>
@@ -86,14 +86,14 @@
     </widget>
    </item>
   </layout>
-  <action name="actionImport_overwrite">
-   <property name="text">
-    <string>Import (overwrite)</string>
-   </property>
-  </action>
   <action name="actionImport_append">
    <property name="text">
     <string>Import (append)</string>
+   </property>
+  </action>
+  <action name="actionImport_overwrite">
+   <property name="text">
+    <string>Import (overwrite)</string>
    </property>
   </action>
   <action name="actionExport">

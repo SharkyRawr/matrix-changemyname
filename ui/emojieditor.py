@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\emojieditor.ui'
+# Form implementation generated from reading ui file 'ui/emojieditor.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -40,16 +40,16 @@ class Ui_EmojiEditor(object):
         self.verticalLayout_2.addLayout(self.gridLayout)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout.addWidget(self.scrollArea)
-        self.actionImport_overwrite = QtWidgets.QAction(EmojiEditor)
-        self.actionImport_overwrite.setObjectName("actionImport_overwrite")
         self.actionImport_append = QtWidgets.QAction(EmojiEditor)
         self.actionImport_append.setObjectName("actionImport_append")
+        self.actionImport_overwrite = QtWidgets.QAction(EmojiEditor)
+        self.actionImport_overwrite.setObjectName("actionImport_overwrite")
         self.actionExport = QtWidgets.QAction(EmojiEditor)
         self.actionExport.setObjectName("actionExport")
         self.actionClose = QtWidgets.QAction(EmojiEditor)
         self.actionClose.setObjectName("actionClose")
-        self.menuFile.addAction(self.actionImport_overwrite)
         self.menuFile.addAction(self.actionImport_append)
+        self.menuFile.addAction(self.actionImport_overwrite)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionExport)
         self.menuFile.addSeparator()
@@ -64,7 +64,7 @@ class Ui_EmojiEditor(object):
         _translate = QtCore.QCoreApplication.translate
         EmojiEditor.setWindowTitle(_translate("EmojiEditor", "Emoji editor"))
         self.menuFile.setTitle(_translate("EmojiEditor", "File"))
-        self.actionImport_overwrite.setText(_translate("EmojiEditor", "Import (overwrite)"))
         self.actionImport_append.setText(_translate("EmojiEditor", "Import (append)"))
+        self.actionImport_overwrite.setText(_translate("EmojiEditor", "Import (overwrite)"))
         self.actionExport.setText(_translate("EmojiEditor", "Export"))
         self.actionClose.setText(_translate("EmojiEditor", "Close"))
