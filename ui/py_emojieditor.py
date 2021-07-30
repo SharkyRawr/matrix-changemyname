@@ -169,7 +169,7 @@ class EmojiUploaderTask(QDialog):
             return
 
         mxc = self.matrix.upload_media(file)
-        self.emotes['emoticons'][emojiname] = {
+        self.emotes['images'][emojiname] = {
             'url': mxc
         }
 
@@ -258,7 +258,7 @@ class EmojiEditor(Ui_EmojiEditor, QDialog):
         emotes = self.matrix.get_account_data(
             self.matrix.user_id or '', "im.ponies.user_emotes")
 
-        emoticons: Dict = emotes['emoticons']
+        emoticons: Dict = emotes['images'] or dict()
         emoRow = {}
         row = 0
         for k, v in emoticons.items():
